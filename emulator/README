@@ -1,0 +1,14 @@
+IMPS Emulator Fancy Edition
+
+Features:
+  3D and 2D graphics
+  Command-line debugger
+  Floating point operations
+  Stack and call operations
+  Dynamic linker
+
+Credits:
+  Patrick Chilton (pc2210)
+  Daniel Woffinden (daw10)
+  Ben Perry (bp110)
+  Jonathan Roitgrund (jr1610)

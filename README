@@ -1,0 +1,216 @@
+IMPS-FANCY Assembler/Emulator 2011
+  
+  Patrick Chilton     pc2210
+  Ben Perry           bp110
+  Jonathan Roitgrund  jr1610
+  Daniel Woffinden    daw10
+
+  Since including the emulator into one binary would defeat the point of adding
+  dynamic linking somewhat, the complete project (including demos) is included
+  in the file fancy.tar.gz, which can be extracted using
+
+    $ tar -xvf fancy.tar.gz
+
+  to get the code, and see below for compilation and usage instructions.
+
+COMPILATION
+
+  Makefiles should be included, but it that fails:
+
+  EMULATOR:
+    gcc -c -o emulate.o emulate.c
+    gcc -c -o linker.o linker.c
+    gcc -c -o gltools.o gltools.c
+    gcc -c -o hardware.o hardware.c
+    gcc -lGL -lGLU -lSDL -lreadline emulate.o linker.o gltools.o hardware.o -o emulate
+
+  ASSEMBLER:
+    gcc -c -o assemble.o assemble.c
+    gcc -c -o hashtable.o hashtable.c
+    gcc -c -o opinfo.o opinfo.c
+    gcc assemble.o hashtable.o opinfo.o -o assemble
+
+USAGE
+
+  options can be specified anywhere in command.
+
+  ASSEMBLER:
+  $ assemble [options] source dest
+      accepted options:
+      -v: verbose output
+      -q: suppress standard messages
+
+  EMULATOR:
+  $ emulate [options] binary
+      accepted options:
+      -d: debug mode
+
+DEBUGGER:
+  If emulate is started with the -d options, it starts an interactive CLI
+  shell allowing you to step through the program for debugging purposes.
+
+  Commands:
+    step  - perform one operation
+    dump  - show register contents
+    stepd - step and dump
+    mem   - memory dump using xxd
+    run   - run until halted
+    exit  - quit the debugger
+
+PREPROCESSOR:
+  The assembler invokes the C preprocessor before assembling, allowing the
+  usual macros, includes, defines, etc.
+
+DYNAMIC LINKER:
+
+  Label imports: label@filename
+  Label exports: ~label
+
+  For instance, jmp divider@test2.oout will jump to the location "divider" in
+  the binary "test2.oout" and ~divider will make the location "divider"
+  available for reference from other files.
+
+  Labels MUST be explicitly exported using the ~ operator for the linker
+  to find them.
+
+  See files linking.s and linked.s in demos/ for a concrete example.
+
+GRAPHICS
+
+  Added "gpu" hardware call (see below), takes immediate value to determine function
+
+  0 initOpenGL      
+
+      initialise OpenGL functions
+
+  1 glStartFrame    
+  
+      clears frame buffer (sets to black) 
+
+  2 gl3dProjection  
+  
+      sets up 3d projection matrix
+
+  3 gl2dProjection  
+  
+      sets up 2d projection matrix
+
+  4 glStartPoly     
+  
+      starts drawing a polygon
+
+  5 glDrawVertex    
+  
+      adds vertex to current polygon 
+      xyz = R20, R21, R22
+      RGB = R23, R24, R25
+
+  6 glDrawPixelRGB  
+  
+      draws pixel 
+      xy  = R20, R21
+      RGB = R23, R24, R25
+
+  7 glEnd           
+  
+      finish drawing a polygon
+
+  8 glPresentFrame  
+  
+      presents back buffer to screen
+
+  Rules for use
+  
+    > a initOpenGL must precede any other calls
+
+    > each frame must begin with a glStartFrame and end with a glPresentFrame
+
+    > 3D instructions must follow a gl3DProjection, not a gl2DProjection, and
+      vice versa (though both can be used in a single frame)
+
+    > each 3D polygon consists of glDrawVertex calls preceded by a glStartPoly 
+      call and followed by a glEnd call
+
+DEMOS:
+  glDemo     - 3D sine wave
+  glTrippy   - 3D graphical effect
+  mandelbrot - 2D mandelbrot set (give it a couple of seconds to render)
+  ackermann  - computes the 2 argument ackermann function
+             - ackermann2 is optimised to utilise tail recursion
+             - ackermann2-imps is an IMPS compliant version, without extensions
+  
+  linking
+  linked     - basic dynamic linking
+  
+  stack
+  stack2     - push/pop/call tests
+
+APPENDIX I: ADDED INSTRUCTIONS
+
+  "push", 18, R1TYPE
+
+    pushes $1 to the the stack, sp -= 4
+
+  "pop" , 19, R1TYPE
+
+    pops from the stack to $1, sp += 4
+
+  "mvsp", 20, R1TYPE
+
+    $1 = sp, ie creates a base pointer
+
+  "call", 21, JTYPE 
+
+    pushes pc+4 to the head of the stack, sp -= 2 and jumps to A.
+
+  "ret" , 22, MISC
+
+    pops the value at the head of the stack to pc (jumps back to caller), sp += 2
+
+  "fadd", 23, RTYPE
+
+    $1 = $2 + $3 for floats
+
+  "fsub", 24, RTYPE 
+
+    $1 = $2 - $3 for floats
+
+  "fmul", 25, RTYPE 
+
+    $1 = $2 * $3 for floats
+
+  "fdiv", 26, RTYPE 
+
+    $1 = $2 / $3 for floats
+
+  "itof", 27, R12TYPE
+
+    $1 = $2 converted from int to float
+
+  "ftoi", 28, R12TYPE
+
+    $1 = $2 converted from float to int
+
+  "shl" , 29, ITYPE
+
+    $1 = $2 << C
+
+  "shr" , 30, ITYPE
+
+    $1 = $2 >> C
+
+  "sb"  , 31, ITYPE
+
+    memory[$2 + C] = $1
+
+  "gpu" , 32, JTYPE
+
+    GPU hardware call, see above
+
+  "fsin", 33, R12TYPE
+
+    $1 = sin($2) ($1, $2 :: float)
+
+  "tics", 34, R1TYPE
+
+    $1 = milliseconds since start :: int
