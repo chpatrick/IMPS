@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <string.h>
+#include <ctype.h>
 #ifdef FANCY
 #include <fcntl.h>
 #include <unistd.h>
@@ -63,7 +64,7 @@ void convertTwoDigits(char *number) {
 
 void printWithLength(char *str, FILE* fp) {
   char numChars[3];
-  sprintf(numChars, "%d", strlen(str));
+  sprintf(numChars, "%zd", strlen(str));
   convertTwoDigits(numChars);
   fputs(numChars, fp);
   fputs(str, fp);
@@ -72,7 +73,7 @@ void printWithLength(char *str, FILE* fp) {
 void printIntWithLength(int toPrint, FILE* fp) {
   char number[10];
   sprintf(number, "%d", toPrint);
-  fprintf(fp, "%d", strlen(number));
+  fprintf(fp, "%zd", strlen(number));
   fputs(number, fp);
 }
 #endif

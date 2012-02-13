@@ -3,10 +3,8 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #ifdef FANCY
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <SDL/SDL.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <fcntl.h>
